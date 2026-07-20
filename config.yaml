@@ -1,0 +1,142 @@
+#####################################
+# dataset SPECIFIC parameters: START
+#####################################
+
+download_datasets: 0  # If 1, and a valid URL is provided (see next parameter) then datasets will be downloaded automatically
+                      # If 0, then datasets should be downloaded manually and placed in the datasets folder
+dataset_urls:
+  - 
+
+train_test_sep: 0   # If train_test_sep is 1, then test_dataset and test_filepath should be defined
+                      # If train_test_sep is 0, then train and test datasets will be combined
+
+dataset: 50_60_gene_high_var_sergio_genes_31_onwards  # The name of the dataset to be used. This should match the name of the dataset folder in the datasets folder
+filepath: ../Data/Sergio/50_60_gene_high_var_sergio_genes_31_onwards.csv
+
+# test_dataset: sc_celseq2_3cl
+# test_filepath: ../Data/Tian/tian_data/sc_celseq2.count.csv
+
+# fs_list_file_path: 
+hvg_file_path: ../Data/pbmc10k_after_clustering/HVG1000_genes.csv
+hk_genes_file_path: ../Data/Housekeeping_GenesHuman.csv
+union_cluster_genes_file_path: ../Data/pbmc10k_after_clustering/pbmc10k_celltypist_top20_genes.csv
+
+remove_cols: False  # whether independent random sampling (no removal) or random partitioning (with removal)
+
+                          # with independent random sampling (no removal)
+                                  # •	draws from full feature space
+                                  # •	subsets may overlap
+                                  # •	distribution reflects true random sampling behavior
+
+                          # with random partitioning (with removal)
+                                  # •	slicing feature space into chunks
+                                  # •	no overlap
+                                  # •	testing coverage behavior
+
+opt_model: 0 # If 1, then model with optimized hyperparameters will be used, else default model will be used 
+
+run_topk_fs_evaluation: 0  # If 1, then feature selection methods will be run
+# k_list: [10, 50, 100, 200]  
+# k_list: [5, 50, 100, 200]  
+k_list: [5, 10, 20, 50] # List of k values for top-k feature selection evaluation
+
+get_sparsity_summary: 0  # If 1, then sparsity summary of the dataset will be computed and saved to a csv file
+
+run_null_model: 0 # If 1, then null model results will be computed and shown in the plots
+
+run_random_train_test_split: 1 # If 1, then random train-test split will be performed and results will be computed for num_runs runs 
+
+run_with_all_features: 1 # If 1, then results with all features will be computed and shown in the plots
+                          # Note: If run_with_all_features is 1, then feature selection methods will also include "All Features" as a method
+
+run_sel_perc_random_subset_of_all_feature: 0  # If 1, then random subset FS will be applied for various percentage sizes defined below in sel_per_random_subset_size
+sel_per_random_subset_size: [100]  # If > 0, then random subset FS will be applied with the given percentage sizes
+# save_cm_subset_all_features: 0  # If 1, then confusion matrices for various subset sizes will be saved to csv files
+
+run_var_random_subsets_of_all_features: 1  # If 1, then random subset FS will be applied for various subset sizes defined below in feature_ticks_ranges
+run_var_perc_random_subset_of_all_features: 0  # If 1, then random subset FS will be applied for various percentage sizes defined below in feature_ticks_perc_ranges
+
+run_random_subset_ensemble: 0  # If 1, then random subset ensemble FS will be applied for various subset sizes defined below in random_subset_ensemble_percentage_sizes
+random_subset_ensemble_percentage_sizes: [1, 100]  # If > 0, then random subset ensemble FS will be applied with the given size
+
+use_only_fs_list: 0 # If 1, then only genes list from a FS method is used 
+use_only_hvgs: 0 # If 0, then only highly variable genes will be used
+use_only_hk_genes: 0 # If 1, then only housekeeping genes will be used
+use_union_of_cluster_genes: 0 # If 1, then only the union of cluster-specific genes will be used
+use_only_non_hvgs: 0 # If 1, then only non-highly variable genes will be used
+
+use_uc_plus: 0 # If 1, then union of cluster-specific genes + additional genes (HVG/FS) will be used for FS
+
+use_only_mt_genes: 0   # If 1, then only mitochondrial genes will be used for FS
+
+run_all_selected_features: 0   # If 1, then the model will be evaluated on all selected genes (hvgs, non-hvgs, mt genes, hk genes, union of cluster genes)
+run_random_subsets_selected_features: 0 # If 1, then random subset FS will be applied on the selected genes (hvgs, non-hvgs, mt genes, hk genes, union of cluster genes) for various subset sizes 
+                                         #  defined below in feature_ticks_ranges or percentage sizes defined below in feature_ticks_perc_ranges
+use_feature_ticks_ranges: 0  # If 1, then feature_ticks_ranges will be used for random subset FS on the selected genes (hvgs, non-hvgs, mt genes, hk genes, union of cluster genes)
+use_feature_ticks_perc_ranges: 0  # If 1, then feature_ticks_perc_ranges will be used for random subset FS on the selected genes (hvgs, non-hvgs, mt genes, hk genes, union of cluster genes)
+
+run_perc_random_subset_selected_features: 0  # If 1, then random subset of features of the selected genes (hvgs, non-hvgs, mt genes, hk genes, union of cluster genes) for various percentage sizes defined below in the list perc_random_subset_selected_features_subsets
+# perc_random_subset_selected_features_subsets: [20, 30, 40, 50, 60, 70, 80, 90, 100]   # If > 0, then the model will be evaluated on various percentage sizes of selected genes (hvgs, non-hvgs, mt genes, hk genes, union of cluster genes)
+perc_random_subset_selected_features_subsets: [10, 100] 
+
+save_random_subset_selected_features: 0  # If 1, then the selected random subsets of selected genes (hvgs, non-hvgs, mt genes, hk genes, union of cluster genes) will be saved to csv files
+save_cm_subset_selected_features: 0  # If 1, then confusion matrices for mean of num_runs will be saved 
+save_individual_cm_plots: 0  # If 1, then individual confusion matrix plots for each run will be saved
+
+run_random_subset_selected_features: 0 # If 1, then random subset FS will be applied on the selected genes (hvgs, non-hvgs, mt genes, hk genes, union of cluster genes) for various subset sizes defined below in random_subset_selected_features_subsets
+random_subset_selected_features_subsets: [355]  # If > 0, then random subset FS will be applied on the selected genes (hvgs, non-hvgs, mt genes, hk genes, union of cluster genes) with the given sizes
+ 
+show_progress_bar: 0  # If 1, then a progress spinner will be shown during long operations
+
+annotate_paper_results: 0  # If 1, then paper, x_from_paper and y_from_paper should be defined.
+# paper: "Lall (2020)"      # The name of the paper from which the results are taken
+# x_from_paper: 35          # No of selected features
+# y_from_paper: .86         # Accuracy with selected features, with decimal point not percentage
+
+###################################
+# dataset SPECIFIC parameters: END
+################################### 
+
+
+########################################
+# COMMON parameters for datasets: START
+########################################
+
+target: 'type'
+# target: 'Diagnosis'  # The target column in the dataset
+
+model_name: "RF" # "LR", "SVM", "DT", "RF", "NN", "XGB", "GBM", "HistGB", "Ridge"
+                  # GBM = Gradient Boosting Machine is extremely slow on high-dim datasets
+
+random_state: 42 # Random seed for reproducibility
+debug: 0 # If 1, debug information will be printed during execution
+
+
+num_runs: 20  # Number of runs for each random subset size
+
+plot_acc: 0
+plot_auc: 0
+
+interactive: 0
+shuffle_cols: 0
+
+feature_ticks_ranges:
+  - [10, 301, 10]
+
+
+feature_ticks_perc_ranges:
+  - [0.1, 1.0, 0.1]
+  - [1.0, 11.0, 1.0]
+
+  # - [1, 51, 1]
+  # - [60, 201, 10]
+  # - [300, 2001, 100]
+
+######################################
+# COMMON parameters for datasets: END
+######################################
+
+
+# Links to datasets that were previously downloaded:
+  # - Make Weizmann 3 CA dataset link available here
+  
