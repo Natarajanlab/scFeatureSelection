@@ -32,7 +32,11 @@ Datasets live **outside** the repo, one level up:
 
 `download_datasets` in `config.yaml` is `0`, so data must be placed here manually.
 
-**Everything below assumes commands are run from the repo root** — `fs_utils.py` writes plots/CSVs to relative paths (`./Plots/...`), reads `config.yaml` and `gene_metadata.parquet` from the current directory, and `runner_scRNA_Seq.py` resolves `../Data/...` relative to it too. `run_benchmark_tmux.sh` already `cd`s into wherever it's invoked from, so just run it from the repo root.
+**Everything below assumes commands are run from the repo root** — 
+
+`fs_utils.py` writes plots/CSVs to relative paths (`./Plots/...`), reads `config.yaml` and `gene_metadata.parquet` from the current directory, and `runner_scRNA_Seq.py` resolves `../Data/...` relative to it too. 
+
+`run_benchmark_tmux.sh` already `cd`s into wherever it's invoked from, so just run it from the repo root.
 
 ## Setup
 
@@ -41,11 +45,6 @@ python3 -m venv fs_env
 source fs_env/bin/activate
 pip install -r requirements.txt
 ```
-
-`requirements.txt` is what's actually pinned for this project. Two things it doesn't cover:
-
-- **`anndata`** — only needed if `filepath` points at a `.h5ad` file (one of the dataset-loading branches in `runner_scRNA_Seq.py`). Not required for CSV/parquet datasets. `pip install anndata` if you hit an `ImportError` there.
-- **`boruta-py` / `skrebate` / `hsic_lasso`** — `fs_utils.py` optionally wraps these for extra top-k feature-selection methods (Boruta, ReliefF, HSIC Lasso), but they're currently commented out of the active `FS_METHODS` dict (only `lasso`, `elasticnet`, and `rf_importance` run). Not needed unless you re-enable one of those methods in `fs_utils.py`.
 
 `tmux` also needs to be installed on the host (`sudo apt install tmux` / `brew install tmux`).
 
@@ -57,8 +56,6 @@ pip install -r requirements.txt
 - `hvg_file_path`
 - `hk_genes_file_path`
 - `union_cluster_genes_file_path`
-
-**Not checked up front, but also required every run:** `gene_metadata.parquet` in the repo root — it's read unconditionally partway through the script (used to reconcile ENSEMBL vs. HUGO gene IDs) regardless of which experiment toggles are on. If it's missing you won't find out until the run is already partway through loading and cleaning the dataset.
 
 ## Configuring an experiment
 
