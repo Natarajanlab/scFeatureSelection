@@ -1,7 +1,5 @@
-*.ipynb
 !my_test_restored.ipynb
 
-*.py
 !fs_utils.py
 !runner_scRNA_Seq.py
 
