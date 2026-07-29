@@ -20,10 +20,7 @@ Single-cell RNA-seq (scRNA-seq) datasets routinely contain thousands of genes, y
 | **HVGs** | Highly variable genes (pre-computed with Scanpy/Seurat) |
 | **Non-HVGs** | Complement of the HVG set |
 | **Housekeeping genes** | Constitutively expressed genes (Eisenberg & Levanon list) |
-| **Mitochondrial genes** | MT-prefixed genes |
 | **Union-Cluster genes** | Union of top marker genes per cluster (CellTypist / Leiden) |
-| **UC+** | Union-Cluster genes augmented with HVG or FS-selected genes |
-| **Top-k FS** | Lasso (L1-LR / SGD), Elastic Net, Random-Forest importance |
 | **Random subsets** | Randomly sampled gene subsets of varying size (null baseline) |
 
 **Classifiers benchmarked:** Random Forest (`RF`), Logistic Regression (`LR`), Linear SVM (`SVM`), Decision Tree (`DT`), MLP (`NN`), XGBoost (`XGB`), Gradient Boosting (`GBM`), Histogram GBM (`HistGB`), Ridge, SGD, Extra Trees (`ET`).
@@ -45,8 +42,6 @@ The framework has been validated on the following datasets (data must be obtaine
 | PBMC 3k (10x Genomics) | Real | ~2,700 | [10x Genomics](https://www.10xgenomics.com/resources/datasets) |
 | PBMC 10k (10x Genomics) | Real | ~10,000 | [10x Genomics](https://www.10xgenomics.com/resources/datasets) |
 | Zheng 68k PBMCs | Real | ~68,000 | [Zheng et al., 2017](https://doi.org/10.1038/ncomms14049) |
-| CRC GSE81861 | Real | ~272 | [Li et al., 2017](https://doi.org/10.1038/ng.3818) |
-| NIPS 2003 (Arcene, Gisette, Madelon) | Tabular | Variable | [UCI ML Repository](https://archive.ics.uci.edu/ml/) |
 
 ---
 
