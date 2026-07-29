@@ -1,121 +1,366 @@
-# scRNA-seq Feature Selection Benchmark
+# scFeatureSelection: Benchmarking Feature Selection Strategies for Single-Cell RNA-seq Classification
 
-Benchmarks feature-selection strategies (HVGs, housekeeping genes, mitochondrial genes, cluster-marker unions, top-k FS methods, random subsets) against sklearn/XGBoost classifiers on single-cell RNA-seq datasets (SERGIO simulations, Tian, Wu2021, Qian2020, Bischoff2021, pbmc10k, and others).
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://www.python.org/)
+[![R](https://img.shields.io/badge/R-4.0%2B-276DC3)](https://www.r-project.org/)
 
-## Repository layout
+> **Code accompanying manuscript under review.** Author information will be made public upon acceptance.
+
+---
+
+## Overview
+
+Single-cell RNA-seq (scRNA-seq) datasets routinely contain thousands of genes, yet only a small subset carry information useful for cell-type classification. This repository provides a comprehensive benchmarking framework that systematically evaluates the classification utility of several biologically motivated and data-driven gene-selection strategies across multiple real and synthetic scRNA-seq datasets.
+
+**Gene subsets evaluated:**
+
+| Strategy | Description |
+|---|---|
+| **All features** | Full gene matrix — upper-bound reference |
+| **HVGs** | Highly variable genes (pre-computed with Scanpy/Seurat) |
+| **Non-HVGs** | Complement of the HVG set |
+| **Housekeeping genes** | Constitutively expressed genes (Eisenberg & Levanon list) |
+| **Mitochondrial genes** | MT-prefixed genes |
+| **Union-Cluster genes** | Union of top marker genes per cluster (CellTypist / Leiden) |
+| **UC+** | Union-Cluster genes augmented with HVG or FS-selected genes |
+| **Top-k FS** | Lasso (L1-LR / SGD), Elastic Net, Random-Forest importance |
+| **Random subsets** | Randomly sampled gene subsets of varying size (null baseline) |
+
+**Classifiers benchmarked:** Random Forest (`RF`), Logistic Regression (`LR`), Linear SVM (`SVM`), Decision Tree (`DT`), MLP (`NN`), XGBoost (`XGB`), Gradient Boosting (`GBM`), Histogram GBM (`HistGB`), Ridge, SGD, Extra Trees (`ET`).
+
+**Metrics:** Accuracy, balanced accuracy, F1 (macro), precision, recall, ROC-AUC, PR-AUC, MCC.
+
+---
+
+## Datasets
+
+The framework has been validated on the following datasets (data must be obtained independently — see [Data Availability](#data-availability)):
+
+| Dataset | Type | Approx. cells | Source |
+|---|---|---|---|
+| SERGIO simulations | Synthetic | Variable | [Dibaeinia & Sinha, 2020](https://doi.org/10.1016/j.cels.2020.08.003) |
+| Tian 2019 (`sc_10x`, `sc_celseq2`, `sc_dropseq`) | Real | ~3,000 | [Tian et al., 2019](https://doi.org/10.1038/s41592-019-0425-8) |
+| Wu 2021 | Real | ~24,000 | [Wu et al., 2021](https://doi.org/10.1038/s41588-021-00911-1) |
+| Qian 2020 | Real | ~52,000 | [Qian et al., 2020](https://doi.org/10.1016/j.celrep.2020.108161) |
+| PBMC 3k (10x Genomics) | Real | ~2,700 | [10x Genomics](https://www.10xgenomics.com/resources/datasets) |
+| PBMC 10k (10x Genomics) | Real | ~10,000 | [10x Genomics](https://www.10xgenomics.com/resources/datasets) |
+| Zheng 68k PBMCs | Real | ~68,000 | [Zheng et al., 2017](https://doi.org/10.1038/ncomms14049) |
+| CRC GSE81861 | Real | ~272 | [Li et al., 2017](https://doi.org/10.1038/ng.3818) |
+| NIPS 2003 (Arcene, Gisette, Madelon) | Tabular | Variable | [UCI ML Repository](https://archive.ics.uci.edu/ml/) |
+
+---
+
+## Repository Layout
+
+All files reside in the repository root.
 
 ```
-.
-├── runner_scRNA_Seq.py       # main entry point — runs whatever experiment(s) config.yaml enables
-├── fs_utils.py                 # config loading/validation, model zoo, FS methods, eval + plotting helpers
-├── run_benchmark_tmux.sh      # launches runner_scRNA_Seq.py inside a named, detachable tmux session
-├── config.yaml                 # experiment configuration — path is hardcoded in fs_utils.load_config()
-├── gene_metadata.parquet      # ENSEMBL <-> HUGO symbol lookup — read unconditionally, every run
-├── requirements.txt
-├── Plots/                      # output dir — created automatically on import
-└── logs/                       # tmux session stdout+stderr logs — created automatically
+scFeatureSelection/
+│
+├── runner_scRNA_Seq.py        # Main entry point — orchestrates all experiments
+├── fs_utils.py                # Core library: config, model zoo, FS methods, eval & plotting
+├── make_geneset_figures.py    # Standalone figure-generation script (gene-set performance plots)
+│
+├── config.yaml                # Experiment configuration (edit this to run experiments)
+├── gene_metadata.parquet      # ENSEMBL ↔ HUGO symbol lookup table (read on every run)
+├── requirements.txt           # Python dependencies
+│
+├── run_benchmark_tmux.sh      # Runs runner_scRNA_Seq.py in a detachable tmux session
+│
+├── select_pure_pbmc.R         # R: curates pure cell populations from Zheng 68k PBMC data
+├── zheng_filter.R             # R: filters and subsamples the Zheng 68k PBMC matrix
+├── util.R                     # R: shared utilities (normalisation, clustering, plotting)
+│
+├── Wu_Qian_prep.ipynb         # Notebook: preprocessing for Wu 2021 / Qian 2020
+├── pbmc3k_prep.ipynb          # Notebook: preprocessing for PBMC 3k
+├── pbmc10k_prep.ipynb         # Notebook: preprocessing for PBMC 10k
+├── zheng_prep.ipynb           # Notebook: preprocessing for Zheng 68k
+├── tian_prep.ipynb            # Notebook: preprocessing for Tian 2019
+├── synthetic_data_prep.ipynb  # Notebook: SERGIO simulation loading & preprocessing
+├── synthetic_data_generation.ipynb  # Notebook: SERGIO simulation parameter sweeps
+├── make_diff_plot.ipynb       # Notebook: differential analysis plots
+│
+├── LICENSE                    # Apache 2.0
+└── .gitignore
 ```
 
-Datasets live **outside** the repo, one level up:
+> **Data** lives **outside** the repository root, one level up:
+> ```
+> ../Data/
+> ├── Sergio/
+> │   ├── <dataset>.csv
+> │   └── meta_<dataset>.csv       # required for any dataset with 'sergio' in its name
+> ├── pbmc10k_after_clustering/
+> │   ├── HVG1000_genes.csv
+> │   └── pbmc10k_celltypist_top20_genes.csv
+> ├── Housekeeping_GenesHuman.csv
+> └── ...                          # other datasets (parquet / CSV)
+> ```
 
-```
-../Data/
-├── Sergio/
-│   ├── <dataset>.csv
-│   └── meta_<dataset>.csv          # required for any dataset name containing 'sergio' — holds the 'Label' column
-├── pbmc10k_after_clustering/
-│   ├── HVG1000_genes.csv
-│   └── pbmc10k_celltypist_top20_genes.csv
-├── Housekeeping_GenesHuman.csv
-└── ...                              # Wu2021 / Qian2020 / Bischoff2021 (.parquet), NIPS_2003 (Arcene/Gisette/Madelon), sc_10x / sc_celseq2 / sc_dropseq, crc_GSE81861, etc.
-```
+---
 
-`download_datasets` in `config.yaml` is `0`, so data must be placed here manually.
+## Installation
 
-**Everything below assumes commands are run from the repo root** — 
-
-`fs_utils.py` writes plots/CSVs to relative paths (`./Plots/...`), reads `config.yaml` and `gene_metadata.parquet` from the current directory, and `runner_scRNA_Seq.py` resolves `../Data/...` relative to it too. 
-
-`run_benchmark_tmux.sh` already `cd`s into wherever it's invoked from, so just run it from the repo root.
-
-## Setup
+### Python environment
 
 ```bash
-python3 -m venv fs_env
-source fs_env/bin/activate
+python -m venv fs_env
+source fs_env/bin/activate          # Windows: fs_env\Scripts\activate
 pip install -r requirements.txt
 ```
 
-`tmux` also needs to be installed on the host (`sudo apt install tmux` / `brew install tmux`).
+**Core Python dependencies:**
 
-## Required files, checked before any modeling starts
+| Package | Version |
+|---|---|
+| `numpy` | 1.26.4 |
+| `pandas` | 2.2.0 |
+| `scikit-learn` | 1.5.2 |
+| `xgboost` | 2.0.1 |
+| `matplotlib` | 3.8.0 |
+| `seaborn` | 0.13.2 |
+| `PyYAML` | 6.0.2 |
+| `pyarrow` | 15.0.0 |
+| `tqdm` | 4.66.1 |
 
-`runner_scRNA_Seq.py` validates these four paths from `config.yaml` at startup and exits immediately with a clear `FileNotFoundError` if any is missing:
+**Optional (feature selection methods):**
+```bash
+pip install boruta skrebate pyHSICLasso
+```
+If not installed, the respective methods are silently skipped.
 
-- `filepath` (the dataset)
+### R environment (for PBMC / Zheng preprocessing only)
+
+```r
+install.packages(c("Seurat", "Matrix", "ggplot2", "Rtsne", "svd",
+                   "dplyr", "data.table", "pheatmap"))
+BiocManager::install("anndata")
+```
+
+### tmux (for background runs)
+
+```bash
+sudo apt install tmux   # Ubuntu/Debian
+brew install tmux       # macOS
+```
+
+---
+
+## Quick Start
+
+### 1. Place datasets
+
+Ensure all required data files exist at the paths specified in `config.yaml` (paths default to `../Data/`).
+
+### 2. Configure the experiment
+
+Edit `config.yaml` — the primary fields to set:
+
+```yaml
+dataset:   50_60_gene_high_var_sergio_genes_31_onwards   # dataset name
+filepath:  ../Data/Sergio/50_60_gene_high_var_sergio_genes_31_onwards.csv
+target:    type         # label column
+model_name: RF          # classifier (RF, LR, SVM, DT, NN, XGB, GBM, HistGB, Ridge, SGD, ET)
+num_runs:  20           # repetitions per subset size
+random_state: 42
+```
+
+### 3. Validate required files
+
+`runner_scRNA_Seq.py` checks all four required file paths at startup and exits immediately with a clear `FileNotFoundError` if any is missing:
+
+- `filepath` (dataset)
 - `hvg_file_path`
 - `hk_genes_file_path`
 - `union_cluster_genes_file_path`
 
-## Configuring an experiment
+### 4. Run
 
-Everything is driven by `config.yaml` (loaded once as `fs_utils.config`, validated on load — invalid `model_name`, non-string `dataset`/`target`, etc. fail fast with an `AssertionError`).
-
-| Key | Purpose |
-|---|---|
-| `dataset`, `filepath` | which dataset to load and where from |
-| `target` | label column name (`'type'` for most datasets) |
-| `model_name` | `RF`, `LR`, `SVM`, `DT`, `NN`/`MLP`, `XGB`, `GBM`, `HistGB`, `Ridge`, `SGD`, or `ET` (Extra Trees) |
-| `train_test_sep` | `1` to evaluate on a separate `test_dataset`/`test_filepath`, `0` to cross-validate/split internally |
-| `use_only_hvgs` / `use_only_hk_genes` / `use_only_mt_genes` / `use_union_of_cluster_genes` / `use_uc_plus` / `use_only_non_hvgs` / `use_only_fs_list` | restrict to one specific gene subset |
-| `run_with_all_features`, `run_var_random_subsets_of_all_features`, `run_random_subset_selected_features`, `run_perc_random_subset_selected_features`, `run_topk_fs_evaluation`, `run_random_train_test_split`, `run_null_model` | which experiment(s) actually execute |
-| `num_runs` | repeats per subset size |
-| `random_state` | seed |
-| `interactive` | if `1`, some code paths call `input()` for a y/n confirmation — **leave this `0`** for unattended tmux runs, or the session will just hang waiting for stdin |
-
-**Only one gene-subset flag may be `1` at a time** — `fs_utils.py` raises `ValueError: multiple gene-selection flags active` if more than one of `use_only_*`/`use_union_of_cluster_genes`/`use_uc_plus` is set. Leave them all `0` to use every gene.
-
-To reproduce a specific prior result: edit the fields above in `config.yaml` to match that experiment (or check out the commit/branch where that `config.yaml` version lives), then launch with a tmux session name that describes it — **the session name is just a log-file label, it does not select the dataset or experiment.** What actually runs always comes from whatever `config.yaml` currently contains.
-
-If `run_topk_fs_evaluation: 1`: only `lasso`, `elasticnet`, and `rf_importance` are active methods (see `FS_METHODS` in `fs_utils.py`) — evaluated over `k_list`.
-
-## Running
-
+**Option A — tmux (recommended for long runs):**
 ```bash
 chmod +x run_benchmark_tmux.sh   # first time only
 ./run_benchmark_tmux.sh <session_name>
 ```
 
-Example, matching a SERGIO low-variance gene experiment:
-
+**Option B — direct:**
 ```bash
-./run_benchmark_tmux.sh 50_60_gene_low_var_sergio_genes_31_onwards_all_subsets
+source fs_env/bin/activate
+python runner_scRNA_Seq.py
 ```
 
-This starts (or re-attaches to, if the name already exists) a tmux session that activates `fs_env` and runs `python3 runner_scRNA_Seq.py`, teeing combined stdout+stderr to `logs/<session_name>_output.log`.
+**Monitor / manage a tmux run:**
+```bash
+tmux attach -t <session_name>          # reattach
+tail -f logs/<session_name>_output.log  # tail log without attaching
+tmux kill-session -t <session_name>    # stop run
+```
 
-- **Watch live:** `tmux attach -t <session_name>` (detach again with `Ctrl+B`, then `D`)
-- **Tail the log without attaching:** `tail -f logs/<session_name>_output.log`
-- **Stop it:** `tmux kill-session -t <session_name>`
+---
+
+## Configuration Reference
+
+`config.yaml` controls every aspect of an experiment. **Only one** gene-subset flag (`use_only_*` / `use_union_of_cluster_genes` / `use_uc_plus`) may be set to `1` at a time; leaving all at `0` uses every gene.
+
+### Dataset
+
+| Key | Type | Description |
+|---|---|---|
+| `dataset` | `str` | Dataset identifier (used for output naming) |
+| `filepath` | `str` | Path to the main dataset file |
+| `target` | `str` | Name of the label column (e.g. `'type'`) |
+| `train_test_sep` | `0/1` | `1` = evaluate on a separate held-out set defined by `test_dataset` / `test_filepath`; `0` = internal split / cross-validation |
+| `test_dataset`, `test_filepath` | `str` | Only required when `train_test_sep: 1` |
+| `hvg_file_path` | `str` | CSV of pre-computed HVG gene names |
+| `hk_genes_file_path` | `str` | CSV of housekeeping gene names |
+| `union_cluster_genes_file_path` | `str` | CSV of union-of-cluster marker genes |
+
+### Model
+
+| Key | Type | Description |
+|---|---|---|
+| `model_name` | `str` | `RF`, `LR`, `SVM`, `DT`, `NN`/`MLP`, `XGB`, `GBM`, `HistGB`, `Ridge`, `SGD`, `ET` |
+| `opt_model` | `0/1` | `1` uses optimised (grid-searched) hyperparameters |
+| `random_state` | `int` | Global random seed |
+| `num_runs` | `int` | Repetitions per condition |
+
+### Gene-subset flags (mutually exclusive)
+
+| Key | Description |
+|---|---|
+| `use_only_hvgs` | Restrict to HVGs |
+| `use_only_non_hvgs` | Restrict to non-HVGs |
+| `use_only_hk_genes` | Restrict to housekeeping genes |
+| `use_only_mt_genes` | Restrict to mitochondrial genes |
+| `use_union_of_cluster_genes` | Restrict to union-of-cluster marker genes |
+| `use_uc_plus` | Union-cluster genes + additional HVG/FS genes |
+| `use_only_fs_list` | Restrict to genes from an external FS list (`fs_list_file_path`) |
+
+### Experiment toggles
+
+| Key | Description |
+|---|---|
+| `run_with_all_features` | Evaluate classifier with the full feature set |
+| `run_random_train_test_split` | Evaluate over `num_runs` random train/test splits |
+| `run_var_random_subsets_of_all_features` | Sweep over random gene subsets of increasing size (`feature_ticks_ranges`) |
+| `run_topk_fs_evaluation` | Evaluate Lasso / ElasticNet / RF-importance top-k subsets over `k_list` |
+| `run_perc_random_subset_selected_features` | Random % subsets of the chosen gene set |
+| `run_random_subset_selected_features` | Fixed-size random subsets of the chosen gene set |
+| `run_null_model` | Include a majority-class null-model baseline |
+| `get_sparsity_summary` | Compute and save dataset sparsity statistics |
+
+### Sweep parameters
+
+| Key | Default | Description |
+|---|---|---|
+| `feature_ticks_ranges` | `[[10, 301, 10]]` | `[start, stop, step]` ranges for absolute feature-count sweeps |
+| `feature_ticks_perc_ranges` | `[[0.1, 1.0, 0.1], ...]` | Percentage sweep ranges |
+| `k_list` | `[5, 10, 20, 50]` | Top-k values for FS evaluation |
+| `remove_cols` | `false` | `false` = independent random sampling (with replacement); `true` = random partition (no overlap) |
+
+### Output / display
+
+| Key | Description |
+|---|---|
+| `interactive` | Set to `0` for all unattended / tmux runs — avoids blocking `input()` calls |
+| `debug` | `1` enables verbose diagnostic output |
+| `show_progress_bar` | `1` shows a progress spinner (TTY only) |
+| `save_cm_subset_selected_features` | `1` saves per-subset confusion-matrix PDFs |
+
+---
 
 ## Outputs
 
-Everything lands under a path `fs_utils.py` builds automatically (and creates on import):
+All outputs are written to an automatically created subdirectory of `./Plots/`:
 
-- `train_test_sep: 0` → `./Plots/<dataset>/<model_name>/<gene_subset_suffix?>/`
-- `train_test_sep: 1` → `./Plots/<dataset>/test_<test_dataset>/<model_name>_train_test_sep/<gene_subset_suffix?>/`
-
-(`<gene_subset_suffix?>` is one of `hvgs`, `non_hvgs`, `mt_genes`, `hk_genes`, `union_cluster_genes`, `uc_plus`, `fs_list` — only present if the matching flag is `1`.)
-
-What each active toggle produces there, from the config included with this repo:
-
-| Toggle | Output |
+| `train_test_sep` | Output path |
 |---|---|
-| `run_with_all_features` | printed accuracy/AUC — no file, just console/log |
-| `run_var_random_subsets_of_all_features` | `<dataset>_<model>_(D/O)_random_features_all_extended_results.csv` (per-subset-size mean/median/std across metrics). Note: the corresponding plot call is commented out in `runner_scRNA_Seq.py`, so no PDF is produced for this toggle currently — only the CSV. |
-| `run_random_train_test_split` | confusion-matrix PDF + `random_train_test_split_results_<dataset>.csv`, averaged over `num_runs` random splits |
-| `run_perc_random_subset_selected_features` / `run_random_subset_selected_features` | extended-results CSV per subset size/percentage, plus confusion-matrix PDFs if `save_cm_subset_selected_features: 1` |
+| `0` | `./Plots/<dataset>/<model_name>/[<gene_subset>/]` |
+| `1` | `./Plots/<dataset>/test_<test_dataset>/<model_name>_train_test_sep/[<gene_subset>/]` |
+
+`<gene_subset>` is one of `hvgs`, `non_hvgs`, `mt_genes`, `hk_genes`, `union_cluster_genes`, `uc_plus`, `fs_list` — present only when the corresponding flag is `1`.
+
+| Toggle | Files produced |
+|---|---|
+| `run_with_all_features` | Console/log only (no file) |
+| `run_random_train_test_split` | Confusion-matrix PDF + `random_train_test_split_results_<dataset>.csv` |
+| `run_var_random_subsets_of_all_features` | `<dataset>_<model>_(D/O)_random_features_all_extended_results.csv` |
 | `run_topk_fs_evaluation` | `fs_topk_summary.csv` |
+| `run_perc_random_subset_selected_features` | Extended-results CSV per percentage size |
+| `run_random_subset_selected_features` | Extended-results CSV per subset size |
 | `get_sparsity_summary` | `<dataset>_sparsity_summary.csv` |
 
-Console output also logs dataset shape, class balance, and per-experiment timing — check `logs/<session_name>_output.log` if a run needs auditing after the fact.
+Console output additionally logs dataset shape, class balance, and per-experiment timing. Log files are saved to `logs/<session_name>_output.log` when using the tmux runner.
+
+---
+
+## Reproducing Paper Results
+
+Each experiment in the paper maps to a specific `config.yaml` configuration. The general workflow is:
+
+1. Obtain and place the relevant dataset at the path specified in `config.yaml`.
+2. Set `dataset`, `filepath`, `target`, `model_name`, and the appropriate experiment toggle.
+3. Set `num_runs: 20` and `random_state: 42` to match the paper's settings.
+4. Run via `./run_benchmark_tmux.sh <descriptive_session_name>`.
+5. Results appear in `./Plots/<dataset>/` and `logs/<session_name>_output.log`.
+
+> **Example** — reproducing the SERGIO high-variance 50-gene experiment:
+> ```yaml
+> dataset: 50_60_gene_high_var_sergio_genes_31_onwards
+> filepath: ../Data/Sergio/50_60_gene_high_var_sergio_genes_31_onwards.csv
+> model_name: RF
+> run_var_random_subsets_of_all_features: 1
+> num_runs: 20
+> random_state: 42
+> ```
+> ```bash
+> ./run_benchmark_tmux.sh sergio_high_var_50gene_RF
+> ```
+
+### Figure generation
+
+Publication-quality gene-set performance figures (PR-AUC curves, ROC-AUC curves, Cleveland dot plots, lollipop/gap charts) are produced by `make_geneset_figures.py`:
+
+```bash
+# Edit the LEIDEN_FILES and CT_FILES path variables at the top of the script, then:
+python make_geneset_figures.py
+python make_geneset_figures.py --out ./my_figures   # custom output directory
+```
+
+---
+
+## Feature Selection Methods
+
+When `run_topk_fs_evaluation: 1`, the following methods are applied:
+
+| Method | Implementation | Notes |
+|---|---|---|
+| **Lasso** | `LogisticRegressionCV(penalty='l1', solver='saga')` | Falls back to `SGDClassifier(penalty='l1')` for `p > 10,000, n < 2,000` |
+| **Elastic Net** | `ElasticNetCV` | Combines L1 + L2 penalties |
+| **RF Importance** | `RandomForestClassifier` mean decrease in impurity | Aggregated across all trees |
+| **Boruta** | `BorutaPy` | Optional — requires `pip install boruta` |
+| **ReliefF** | `skrebate.ReliefF` | Optional — requires `pip install skrebate` |
+| **HSIC Lasso** | `pyHSICLasso` | Optional — requires `pip install pyHSICLasso` |
+
+Optional methods are automatically skipped if the corresponding package is not installed.
+
+---
+
+## Data Availability
+
+Raw data for real datasets are publicly available from the sources listed in the [Datasets](#datasets) table. SERGIO simulation scripts are included in `synthetic_data_generation.ipynb`. Pre-processed files required at runtime (`../Data/`) must be generated using the per-dataset preprocessing notebooks included in this repository. No raw data files are committed to this repository.
+
+---
+
+## Citation
+
+> Details will be updated upon publication.
+
+If you use this code in your research, please cite the associated manuscript (citation information to be provided upon acceptance).
+
+---
+
+## License
+
+This project is licensed under the **Apache License 2.0** — see [LICENSE](LICENSE) for details.
+
+The R utilities (`util.R`, `select_pure_pbmc.R`) contain code originally Copyright © 2016 10x Genomics, Inc., distributed under the same Apache 2.0 licence.
