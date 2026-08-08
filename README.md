@@ -1,10 +1,11 @@
-# scFeatureSelection: Benchmarking Feature Selection Strategies for Single-Cell RNA-seq Classification
+# scFeatureSelection: systematic evaluation of feature selection strategies reveals transcriptomic redundancy in single-cell RNA sequencing
+Bhavesh Neekhra, Shreyansh Priyadarshi, Kedar Natarajan
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://www.python.org/)
 [![R](https://img.shields.io/badge/R-4.0%2B-276DC3)](https://www.r-project.org/)
 
-> **Code accompanying manuscript under review.** Author information will be made public upon acceptance.
+> **Code accompanying manuscript ** 
 
 ---
 
@@ -35,13 +36,12 @@ The framework has been validated on the following datasets (data must be obtaine
 
 | Dataset | Type | Approx. cells | Source |
 |---|---|---|---|
-| SERGIO simulations | Synthetic | Variable | [Dibaeinia & Sinha, 2020](https://doi.org/10.1016/j.cels.2020.08.003) |
+| Synthetic scRNA-seq simulated data | Synthetic | Variable | [Dibaeinia & Sinha, 2020](https://doi.org/10.1016/j.cels.2020.08.003) |
 | Tian 2019 (`sc_10x`, `sc_celseq2`, `sc_dropseq`) | Real | ~3,000 | [Tian et al., 2019](https://doi.org/10.1038/s41592-019-0425-8) |
 | Wu 2021 | Real | ~24,000 | [Wu et al., 2021](https://doi.org/10.1038/s41588-021-00911-1) |
 | Qian 2020 | Real | ~52,000 | [Qian et al., 2020](https://doi.org/10.1016/j.celrep.2020.108161) |
 | PBMC 3k (10x Genomics) | Real | ~2,700 | [10x Genomics](https://www.10xgenomics.com/resources/datasets) |
 | PBMC 10k (10x Genomics) | Real | ~10,000 | [10x Genomics](https://www.10xgenomics.com/resources/datasets) |
-| Zheng 68k PBMCs | Real | ~68,000 | [Zheng et al., 2017](https://doi.org/10.1038/ncomms14049) |
 
 ---
 
@@ -69,7 +69,6 @@ scFeatureSelection/
 ├── Wu_Qian_prep.ipynb         # Notebook: preprocessing for Wu 2021 / Qian 2020
 ├── pbmc3k_prep.ipynb          # Notebook: preprocessing for PBMC 3k
 ├── pbmc10k_prep.ipynb         # Notebook: preprocessing for PBMC 10k
-├── zheng_prep.ipynb           # Notebook: preprocessing for Zheng 68k
 ├── tian_prep.ipynb            # Notebook: preprocessing for Tian 2019
 ├── synthetic_data_prep.ipynb  # Notebook: SERGIO simulation loading & preprocessing
 ├── synthetic_data_generation.ipynb  # Notebook: SERGIO simulation parameter sweeps
@@ -348,9 +347,9 @@ Raw data for real datasets are publicly available from the sources listed in the
 
 ## Citation
 
-> Details will be updated upon publication.
+> Neekhra B, Priyadarshi S and Natarajan KN (2026) scFeatureSelection: systematic evaluation of feature selection strategies reveals transcriptomic redundancy in single-cell RNA sequencing
 
-If you use this code in your research, please cite the associated manuscript (citation information to be provided upon acceptance).
+If you use this code in your research, please cite the associated manuscript.
 
 ---
 
