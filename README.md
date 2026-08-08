@@ -1,5 +1,5 @@
 # scFeatureSelection: systematic evaluation of feature selection strategies reveals transcriptomic redundancy in single-cell RNA sequencing
-Bhavesh Neekhra, Shreyansh Priyadarshi, Kedar Natarajan
+Bhavesh Neekhra, Shreyansh Priyadarshi and Kedar Natarajan
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue)](https://www.python.org/)
@@ -347,7 +347,7 @@ Raw data for real datasets are publicly available from the sources listed in the
 
 ## Citation
 
-> Neekhra B, Priyadarshi S and Natarajan KN (2026) scFeatureSelection: systematic evaluation of feature selection strategies reveals transcriptomic redundancy in single-cell RNA sequencing
+> Neekhra B, Priyadarshi S and Natarajan KN (2026) *scFeatureSelection: systematic evaluation of feature selection strategies reveals transcriptomic redundancy in single-cell RNA sequencing (under review)*
 
 If you use this code in your research, please cite the associated manuscript.
 
