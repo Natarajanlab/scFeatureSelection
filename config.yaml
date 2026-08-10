@@ -105,8 +105,7 @@ annotate_paper_results: 0  # If 1, then paper, x_from_paper and y_from_paper sho
 target: 'type'
 # target: 'Diagnosis'  # The target column in the dataset
 
-model_name: "RF" # "LR", "SVM", "DT", "RF", "NN", "XGB", "GBM", "HistGB", "Ridge"
-                  # GBM = Gradient Boosting Machine is extremely slow on high-dim datasets
+model_name: "RF" 
 
 random_state: 42 # Random seed for reproducibility
 debug: 0 # If 1, debug information will be printed during execution
