@@ -128,7 +128,7 @@ def load_config(path="config.yaml", validate=True, confirm=False):
 def _validate_config(cfg):
     assert "dataset" in cfg and isinstance(cfg["dataset"], str), "dataset must be a string"
     assert "target" in cfg and isinstance(cfg["target"], str), "target must be a string"
-    assert cfg.get("model_name") in {"Logistic Regression", "LR", "SVM", "Decision Tree", "DT", "Random Forest", "RF", "Neural Network", "NN", "MLP", "XGBoost", "XGB", "GBM", "HistGB", "Ridge", "SGD"}, "invalid model_name"
+    assert cfg.get("model_name") in {"Random Forest", "RF"}, "invalid model_name"
     assert isinstance(cfg.get("opt_model", 0), int), "opt_model must be int"
     assert isinstance(cfg.get("random_state", 42), int), "random_state must be int"
     assert isinstance(cfg.get("num_runs", 1), int) and cfg["num_runs"] > 0, "num_runs must be positive int"
@@ -542,58 +542,9 @@ def get_model(model_name=config['model_name'], dataset=config['dataset'], random
   
   if not(opt_model):
       model_dict = {
-            'Logistic Regression':lambda: LogisticRegression(class_weight='balanced', n_jobs=-1, random_state=random_state),
-            'LR':lambda: LogisticRegression(class_weight='balanced', n_jobs=-1, random_state=random_state),
-
-            'SVM':lambda: LinearSVC(dual=True, class_weight='balanced', random_state=random_state),
-
-            'Decision Tree':lambda: DecisionTreeClassifier(class_weight='balanced', random_state=random_state),
-            'DT':lambda: DecisionTreeClassifier(class_weight='balanced', random_state=random_state),
-
             'Random Forest': lambda: RandomForestClassifier(class_weight='balanced', random_state=random_state),
             'RF':lambda: RandomForestClassifier(class_weight='balanced', random_state=random_state),
-
-            # for large datasets with many features and samples, use n_jobs (depending on the number of cores) to speed up training
-            # 'Random Forest': lambda: RandomForestClassifier(n_estimators=200,
-            #                                                 max_depth=20,
-            #                                                 class_weight="balanced",
-            #                                                 random_state=random_state,
-            #                                                 n_jobs=56
-            #                                                 ),
-            # 'RF': lambda: RandomForestClassifier(n_estimators=200,
-            #                                                 max_depth=20,
-            #                                                 class_weight="balanced",
-            #                                                 random_state=random_state,
-            #                                                 n_jobs=56
-            #                                                 ),
-            'Extra Trees': lambda: ExtraTreesClassifier(n_estimators=300,
-                                                        max_depth=20,
-                                                        class_weight="balanced",
-                                                        n_jobs=56,
-                                                        random_state=random_state,
-                                                        ),
-            'ET': lambda: ExtraTreesClassifier(n_estimators=300,
-                                                        max_depth=20,
-                                                        class_weight="balanced",
-                                                        n_jobs=56,
-                                                        random_state=random_state,
-                                                        ),
-
-            "Neural Network":lambda: MLPClassifier(hidden_layer_sizes=[256, 128], batch_size=32, random_state=random_state),
-            "NN":lambda: MLPClassifier(hidden_layer_sizes=[256, 128], batch_size=32, random_state=random_state),
-            "MLP":lambda: MLPClassifier(hidden_layer_sizes=[256, 128], batch_size=32, random_state=random_state),
-
-            "XGBoost": lambda: XGBClassifier(objective='binary:logistic', random_state=random_state),
-            "XGB": lambda: XGBClassifier(objective='binary:logistic', random_state=random_state),
-
-            'GBM': lambda: GradientBoostingClassifier(random_state=random_state),
-
-            'HistGB': lambda: HistGradientBoostingClassifier(random_state=random_state), 
-
-            'Ridge': lambda: RidgeClassifier(class_weight='balanced', random_state=random_state),
-
-            'SGD': lambda: SGDClassifier(class_weight='balanced', loss="log_loss", random_state=random_state),
-            }
+		   }
   elif opt_model:
       if dataset == "GSE4115":
           model_dict = {

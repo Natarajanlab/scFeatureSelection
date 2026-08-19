@@ -24,8 +24,6 @@ Single-cell RNA-seq (scRNA-seq) datasets routinely contain thousands of genes, y
 | **Union-Cluster genes** | Union of top marker genes per cluster (CellTypist / Leiden) |
 | **Random subsets** | Randomly sampled gene subsets of varying size (null baseline) |
 
-**Classifiers benchmarked:** Random Forest (`RF`), Logistic Regression (`LR`), Linear SVM (`SVM`), Decision Tree (`DT`), MLP (`NN`), XGBoost (`XGB`), Gradient Boosting (`GBM`), Histogram GBM (`HistGB`), Ridge, SGD, Extra Trees (`ET`).
-
 **Metrics:** Accuracy, balanced accuracy, F1 (macro), precision, recall, ROC-AUC, PR-AUC, MCC.
 
 ---
@@ -154,7 +152,7 @@ Edit `config.yaml` — the primary fields to set:
 dataset:   50_60_gene_high_var_sergio_genes_31_onwards   # dataset name
 filepath:  ../Data/Sergio/50_60_gene_high_var_sergio_genes_31_onwards.csv
 target:    type         # label column
-model_name: RF          # classifier (RF, LR, SVM, DT, NN, XGB, GBM, HistGB, Ridge, SGD, ET)
+model_name: RF          # classifier 
 num_runs:  20           # repetitions per subset size
 random_state: 42
 ```
@@ -212,7 +210,7 @@ tmux kill-session -t <session_name>    # stop run
 
 | Key | Type | Description |
 |---|---|---|
-| `model_name` | `str` | `RF`, `LR`, `SVM`, `DT`, `NN`/`MLP`, `XGB`, `GBM`, `HistGB`, `Ridge`, `SGD`, `ET` |
+| `model_name` | `str` | `RF` |
 | `opt_model` | `0/1` | `1` uses optimised (grid-searched) hyperparameters |
 | `random_state` | `int` | Global random seed |
 | `num_runs` | `int` | Repetitions per condition |
