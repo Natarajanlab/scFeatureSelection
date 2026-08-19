@@ -348,6 +348,7 @@ Raw data for real datasets are publicly available from the sources listed in the
 > Neekhra B, Priyadarshi S and Natarajan KN (2026) *scFeatureSelection: systematic evaluation of feature selection strategies reveals transcriptomic redundancy in single-cell RNA sequencing (under review)*
 
 If you use this code in your research, please cite the associated manuscript.
+DOI: 10.5281/zenodo.21862817
 
 ---
 
